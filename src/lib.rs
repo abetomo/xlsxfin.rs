@@ -156,3 +156,177 @@ mod tests_pmt {
         }
     }
 }
+
+pub fn ipmt(rate: f64, per: i64, nper: i64, pv: i64, fv: i64, payment_flag: bool) -> f64 {
+    if nper == 0 {
+        return 0.0;
+    }
+
+    if per == 0 {
+        return 0.0;
+    }
+
+    if rate < 0.0 {
+        return 0.0;
+    }
+
+    let pmt = pmt(rate, nper, pv, fv, false);
+    let per_sub_1_f64 = (per - 1) as f64;
+
+    let n = if rate.abs() > 0.5 {
+        (1.0 + rate).powf(per_sub_1_f64)
+    } else {
+        (per_sub_1_f64 * (1.0 + rate).ln()).exp()
+    };
+
+    let m = (per_sub_1_f64 * (1.0 + rate).ln()).exp() - 1.0;
+
+    let ip = -((pv as f64) * n * rate + pmt * m);
+    if !payment_flag {
+        return ip;
+    }
+    return ip / (1.0 + rate);
+}
+
+#[cfg(test)]
+mod tests_ipmt {
+    use super::*;
+
+    #[derive(Debug)]
+    struct TestArgs {
+        rate: f64,
+        per: i64,
+        nper: i64,
+        pv: i64,
+        fv: i64,
+        payment_flag: bool,
+    }
+
+    struct TestData {
+        args: TestArgs,
+        expected: f64,
+    }
+
+    #[test]
+    fn test_per_is_0() {
+        let actual = ipmt(0.3, 0, 36, 100_000, 0, false);
+        assert_eq!(actual, 0.0);
+    }
+
+    #[test]
+    fn test_nper_is_0() {
+        let actual = ipmt(0.3, 3, 0, 100_000, 0, false);
+        assert_eq!(actual, 0.0);
+    }
+
+    #[test]
+    fn test_rate_less_than_0() {
+        let actual = ipmt(-0.1, 3, 36, 100_000, 0, false);
+        assert_eq!(actual, 0.0);
+    }
+
+    #[test]
+    fn test_rate_is_over_0() {
+        let test_cases: [TestData; 8] = [
+            TestData {
+                args: TestArgs {
+                    rate: 0.1,
+                    per: 2,
+                    nper: 36,
+                    pv: 800_000,
+                    fv: 0,
+                    payment_flag: false,
+                },
+                expected: -79_732.55489453014,
+            },
+            TestData {
+                args: TestArgs {
+                    rate: 0.1,
+                    per: 2,
+                    nper: 36,
+                    pv: 800_000,
+                    fv: 0,
+                    payment_flag: true,
+                },
+                expected: -72_484.14081320922,
+            },
+            TestData {
+                args: TestArgs {
+                    rate: 0.1,
+                    per: 2,
+                    nper: 36,
+                    pv: 800_000,
+                    fv: 1_000,
+                    payment_flag: false,
+                },
+                expected: -79_732.22058814831,
+            },
+            TestData {
+                args: TestArgs {
+                    rate: 0.1,
+                    per: 2,
+                    nper: 36,
+                    pv: 800_000,
+                    fv: 1_000,
+                    payment_flag: true,
+                },
+                expected: -72_483.83689831664,
+            },
+            TestData {
+                args: TestArgs {
+                    rate: 0.6,
+                    per: 2,
+                    nper: 36,
+                    pv: 800_000,
+                    fv: 0,
+                    payment_flag: false,
+                },
+                expected: -479_999.9870856327,
+            },
+            TestData {
+                args: TestArgs {
+                    rate: 0.6,
+                    per: 2,
+                    nper: 36,
+                    pv: 800_000,
+                    fv: 0,
+                    payment_flag: true,
+                },
+                expected: -299_999.99192852044,
+            },
+            TestData {
+                args: TestArgs {
+                    rate: 0.6,
+                    per: 2,
+                    nper: 36,
+                    pv: 800_000,
+                    fv: 1_000,
+                    payment_flag: false,
+                },
+                expected: -479_999.9870694897,
+            },
+            TestData {
+                args: TestArgs {
+                    rate: 0.6,
+                    per: 2,
+                    nper: 36,
+                    pv: 800_000,
+                    fv: 1_000,
+                    payment_flag: true,
+                },
+                expected: -299_999.9919184311,
+            },
+        ];
+        for t in &test_cases {
+            let actual = ipmt(
+                t.args.rate,
+                t.args.per,
+                t.args.nper,
+                t.args.pv,
+                t.args.fv,
+                t.args.payment_flag,
+            );
+            assert_eq!(actual, t.expected, "args: {:#?}", t.args);
+        }
+    }
+}
