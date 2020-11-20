@@ -330,3 +330,149 @@ mod tests_ipmt {
         }
     }
 }
+
+pub fn fv(rate: f64, nper: i64, pmt: f64, pv: i64, payment_flag: bool) -> f64 {
+    let pv_f64 = pv as f64;
+    let nper_f64 = nper as f64;
+
+    if rate == 0.0 {
+        return -(pv_f64 + pmt * nper_f64);
+    }
+
+    let term = (1.0 + rate).powf(nper_f64);
+    if payment_flag {
+        return -(pv_f64 * term + (pmt * (1.0 + rate) * (term - 1.0)) / rate);
+    }
+    return -(pv_f64 * term + (pmt * (term - 1.0)) / rate);
+}
+
+#[cfg(test)]
+mod tests_fv {
+    use super::*;
+
+    #[derive(Debug)]
+    struct TestArgs {
+        rate: f64,
+        nper: i64,
+        pmt: f64,
+        pv: i64,
+        payment_flag: bool,
+    }
+
+    struct TestData {
+        args: TestArgs,
+        expected: f64,
+    }
+
+    #[test]
+    fn test_rate_is_0() {
+        let test_cases: [TestData; 4] = [
+            TestData {
+                args: TestArgs {
+                    rate: 0.0,
+                    nper: 12,
+                    pmt: 10_000.0,
+                    pv: 0,
+                    payment_flag: false,
+                },
+                expected: -120_000.0,
+            },
+            TestData {
+                args: TestArgs {
+                    rate: 0.0,
+                    nper: 12,
+                    pmt: 10_000.0,
+                    pv: 0,
+                    payment_flag: true,
+                },
+                expected: -120_000.0,
+            },
+            TestData {
+                args: TestArgs {
+                    rate: 0.0,
+                    nper: 12,
+                    pmt: 10_000.0,
+                    pv: 1_000,
+                    payment_flag: false,
+                },
+                expected: -121_000.0,
+            },
+            TestData {
+                args: TestArgs {
+                    rate: 0.0,
+                    nper: 12,
+                    pmt: 10_000.0,
+                    pv: 1_000,
+                    payment_flag: true,
+                },
+                expected: -121_000.0,
+            },
+        ];
+        for t in &test_cases {
+            let actual = fv(
+                t.args.rate,
+                t.args.nper,
+                t.args.pmt,
+                t.args.pv,
+                t.args.payment_flag,
+            );
+            assert_eq!(actual, t.expected, "args: {:#?}", t.args);
+        }
+    }
+
+    #[test]
+    fn test_rate_is_over_0() {
+        let test_cases: [TestData; 4] = [
+            TestData {
+                args: TestArgs {
+                    rate: 0.1,
+                    nper: 12,
+                    pmt: 10_000.0,
+                    pv: 0,
+                    payment_flag: false,
+                },
+                expected: -213_842.83767210032,
+            },
+            TestData {
+                args: TestArgs {
+                    rate: 0.1,
+                    nper: 12,
+                    pmt: 10_000.0,
+                    pv: 0,
+                    payment_flag: true,
+                },
+                expected: -235_227.12143931031,
+            },
+            TestData {
+                args: TestArgs {
+                    rate: 0.1,
+                    nper: 12,
+                    pmt: 10_000.0,
+                    pv: 1_000,
+                    payment_flag: false,
+                },
+                expected: -216_981.26604882133,
+            },
+            TestData {
+                args: TestArgs {
+                    rate: 0.1,
+                    nper: 12,
+                    pmt: 10_000.0,
+                    pv: 1_000,
+                    payment_flag: true,
+                },
+                expected: -238_365.54981603133,
+            },
+        ];
+        for t in &test_cases {
+            let actual = fv(
+                t.args.rate,
+                t.args.nper,
+                t.args.pmt,
+                t.args.pv,
+                t.args.payment_flag,
+            );
+            assert_eq!(actual, t.expected, "args: {:#?}", t.args);
+        }
+    }
+}
