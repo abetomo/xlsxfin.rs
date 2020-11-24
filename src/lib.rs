@@ -476,3 +476,171 @@ mod tests_fv {
         }
     }
 }
+
+pub fn ppmt(rate: f64, per: i64, nper: i64, pv: i64, fv: i64, payment_flag: bool) -> f64 {
+    if per < 1 || per >= nper + 1 {
+        return 0.0;
+    }
+    let pmt = pmt(rate, nper, pv, fv, payment_flag);
+    let ipmt = ipmt(rate, per, nper, pv, fv, payment_flag);
+    return pmt - ipmt;
+}
+
+#[cfg(test)]
+mod tests_ppmt {
+    use super::*;
+
+    #[derive(Debug)]
+    struct TestArgs {
+        rate: f64,
+        per: i64,
+        nper: i64,
+        pv: i64,
+        fv: i64,
+        payment_flag: bool,
+    }
+
+    struct TestData {
+        args: TestArgs,
+        expected: f64,
+    }
+
+    #[test]
+    fn test_per_less_than_1() {
+        let test_cases: [TestData; 2] = [
+            TestData {
+                args: TestArgs {
+                    rate: 0.1,
+                    per: 0,
+                    nper: 10,
+                    pv: 800_000,
+                    fv: 0,
+                    payment_flag: false,
+                },
+                expected: 0.0,
+            },
+            TestData {
+                args: TestArgs {
+                    rate: 0.1,
+                    per: -1,
+                    nper: 10,
+                    pv: 800_000,
+                    fv: 0,
+                    payment_flag: false,
+                },
+                expected: 0.0,
+            },
+        ];
+        for t in &test_cases {
+            let actual = ppmt(
+                t.args.rate,
+                t.args.per,
+                t.args.nper,
+                t.args.pv,
+                t.args.fv,
+                t.args.payment_flag,
+            );
+            assert_eq!(actual, t.expected, "args: {:#?}", t.args);
+        }
+    }
+
+    #[test]
+    fn test_per_ge_nper_plus_1() {
+        let test_cases: [TestData; 2] = [
+            TestData {
+                args: TestArgs {
+                    rate: 0.1,
+                    per: 11,
+                    nper: 10,
+                    pv: 800_000,
+                    fv: 0,
+                    payment_flag: false,
+                },
+                expected: 0.0,
+            },
+            TestData {
+                args: TestArgs {
+                    rate: 0.1,
+                    per: 15,
+                    nper: 10,
+                    pv: 800_000,
+                    fv: 0,
+                    payment_flag: false,
+                },
+                expected: 0.0,
+            },
+        ];
+        for t in &test_cases {
+            let actual = ppmt(
+                t.args.rate,
+                t.args.per,
+                t.args.nper,
+                t.args.pv,
+                t.args.fv,
+                t.args.payment_flag,
+            );
+            assert_eq!(actual, t.expected, "args: {:#?}", t.args);
+        }
+    }
+
+    #[test]
+    fn test_per_ge_1_and_per_lt_nper_plus_1() {
+        let test_cases: [TestData; 4] = [
+            TestData {
+                args: TestArgs {
+                    rate: 0.1,
+                    per: 12,
+                    nper: 36,
+                    pv: 800_000,
+                    fv: 0,
+                    payment_flag: false,
+                },
+                expected: -7_630.520983834242,
+            },
+            TestData {
+                args: TestArgs {
+                    rate: 0.1,
+                    per: 12,
+                    nper: 36,
+                    pv: 800_000,
+                    fv: 1_000,
+                    payment_flag: false,
+                },
+                expected: -7_640.059135064032,
+            },
+            TestData {
+                args: TestArgs {
+                    rate: 0.1,
+                    per: 12,
+                    nper: 36,
+                    pv: 800_000,
+                    fv: 0,
+                    payment_flag: true,
+                },
+                expected: -6_936.837258031126,
+            },
+            TestData {
+                args: TestArgs {
+                    rate: 0.1,
+                    per: 12,
+                    nper: 36,
+                    pv: 800_000,
+                    fv: 1_000,
+                    payment_flag: true,
+                },
+                expected: -6_945.50830460366,
+            },
+        ];
+        for t in &test_cases {
+            let actual = ppmt(
+                t.args.rate,
+                t.args.per,
+                t.args.nper,
+                t.args.pv,
+                t.args.fv,
+                t.args.payment_flag,
+            );
+            assert_eq!(actual, t.expected, "args: {:#?}", t.args);
+        }
+    }
+}
