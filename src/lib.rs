@@ -644,3 +644,279 @@ mod tests_ppmt {
         }
     }
 }
+
+pub fn cumipmt(rate: f64, nper: i64, pv: i64, start: i64, end: i64, payment_flag: bool) -> f64 {
+    if rate <= 0.0 || nper <= 0 || pv <= 0 {
+        return 0.0;
+    }
+
+    if start < 1 || end < 1 || start > end {
+        return 0.0;
+    }
+
+    let pmt = pmt(rate, nper, pv, 0, payment_flag);
+    let mut interest = 0.0;
+    let mut mut_start = start;
+    if start == 1 {
+        if !payment_flag {
+            interest = -pv as f64;
+            mut_start += 1;
+        }
+    }
+    for i in mut_start..end + 1 {
+        interest += if payment_flag {
+            fv(rate, i - 2, pmt, pv, true) - pmt
+        } else {
+            fv(rate, i - 1, pmt, pv, false)
+        };
+    }
+    return interest * rate;
+}
+
+#[cfg(test)]
+mod tests_cumipmt {
+    use super::*;
+
+    #[derive(Debug)]
+    struct TestArgs {
+        rate: f64,
+        nper: i64,
+        pv: i64,
+        start: i64,
+        end: i64,
+        payment_flag: bool,
+    }
+
+    struct TestData {
+        args: TestArgs,
+        expected: f64,
+    }
+
+    #[test]
+    fn test_rate_le_0() {
+        let test_cases: [TestData; 2] = [
+            TestData {
+                args: TestArgs {
+                    rate: 0.0,
+                    nper: 36,
+                    pv: 800_000,
+                    start: 6,
+                    end: 12,
+                    payment_flag: false,
+                },
+                expected: 0.0,
+            },
+            TestData {
+                args: TestArgs {
+                    rate: -1.0,
+                    nper: 36,
+                    pv: 800_000,
+                    start: 6,
+                    end: 12,
+                    payment_flag: false,
+                },
+                expected: 0.0,
+            },
+        ];
+        for t in &test_cases {
+            let actual = cumipmt(
+                t.args.rate,
+                t.args.nper,
+                t.args.pv,
+                t.args.start,
+                t.args.end,
+                t.args.payment_flag,
+            );
+            assert_eq!(actual, t.expected, "args: {:#?}", t.args);
+        }
+    }
+
+    #[test]
+    fn test_nper_le_0() {
+        let test_cases: [TestData; 2] = [
+            TestData {
+                args: TestArgs {
+                    rate: 0.1,
+                    nper: 0,
+                    pv: 800_000,
+                    start: 6,
+                    end: 12,
+                    payment_flag: false,
+                },
+                expected: 0.0,
+            },
+            TestData {
+                args: TestArgs {
+                    rate: 0.1,
+                    nper: -1,
+                    pv: 800_000,
+                    start: 6,
+                    end: 12,
+                    payment_flag: false,
+                },
+                expected: 0.0,
+            },
+        ];
+        for t in &test_cases {
+            let actual = cumipmt(
+                t.args.rate,
+                t.args.nper,
+                t.args.pv,
+                t.args.start,
+                t.args.end,
+                t.args.payment_flag,
+            );
+            assert_eq!(actual, t.expected, "args: {:#?}", t.args);
+        }
+    }
+
+    #[test]
+    fn test_pv_le_0() {
+        let test_cases: [TestData; 2] = [
+            TestData {
+                args: TestArgs {
+                    rate: 0.1,
+                    nper: 36,
+                    pv: 0,
+                    start: 6,
+                    end: 12,
+                    payment_flag: false,
+                },
+                expected: 0.0,
+            },
+            TestData {
+                args: TestArgs {
+                    rate: 0.1,
+                    nper: 36,
+                    pv: -1,
+                    start: 6,
+                    end: 12,
+                    payment_flag: false,
+                },
+                expected: 0.0,
+            },
+        ];
+        for t in &test_cases {
+            let actual = cumipmt(
+                t.args.rate,
+                t.args.nper,
+                t.args.pv,
+                t.args.start,
+                t.args.end,
+                t.args.payment_flag,
+            );
+            assert_eq!(actual, t.expected, "args: {:#?}", t.args);
+        }
+    }
+
+    #[test]
+    fn test_start_or_end_is_an_invalid_value() {
+        let test_cases: [TestData; 3] = [
+            TestData {
+                args: TestArgs {
+                    rate: 0.1,
+                    nper: 36,
+                    pv: 800_000,
+                    start: 0,
+                    end: 12,
+                    payment_flag: false,
+                },
+                expected: 0.0,
+            },
+            TestData {
+                args: TestArgs {
+                    rate: 0.1,
+                    nper: 36,
+                    pv: 800_000,
+                    start: 1,
+                    end: 0,
+                    payment_flag: false,
+                },
+                expected: 0.0,
+            },
+            TestData {
+                args: TestArgs {
+                    rate: 0.1,
+                    nper: 36,
+                    pv: 800_000,
+                    start: 10,
+                    end: 9,
+                    payment_flag: false,
+                },
+                expected: 0.0,
+            },
+        ];
+        for t in &test_cases {
+            let actual = cumipmt(
+                t.args.rate,
+                t.args.nper,
+                t.args.pv,
+                t.args.start,
+                t.args.end,
+                t.args.payment_flag,
+            );
+            assert_eq!(actual, t.expected, "args: {:#?}", t.args);
+        }
+    }
+
+    #[test]
+    fn test_calculate() {
+        let test_cases: [TestData; 4] = [
+            TestData {
+                args: TestArgs {
+                    rate: 0.1,
+                    nper: 36,
+                    pv: 800_000,
+                    start: 6,
+                    end: 12,
+                    payment_flag: true,
+                },
+                expected: -488_961.5711288557,
+            },
+            TestData {
+                args: TestArgs {
+                    rate: 0.1,
+                    nper: 36,
+                    pv: 800_000,
+                    start: 6,
+                    end: 12,
+                    payment_flag: false,
+                },
+                expected: -537_857.7282417413,
+            },
+            TestData {
+                args: TestArgs {
+                    rate: 0.1,
+                    nper: 36,
+                    pv: 800_000,
+                    start: 1,
+                    end: 12,
+                    payment_flag: true,
+                },
+                expected: -849_911.0839829034,
+            },
+            TestData {
+                args: TestArgs {
+                    rate: 0.1,
+                    nper: 36,
+                    pv: 800_000,
+                    start: 1,
+                    end: 12,
+                    payment_flag: false,
+                },
+                expected: -934_902.1923811939,
+            },
+        ];
+        for t in &test_cases {
+            let actual = cumipmt(
+                t.args.rate,
+                t.args.nper,
+                t.args.pv,
+                t.args.start,
+                t.args.end,
+                t.args.payment_flag,
+            );
+            assert_eq!(actual, t.expected, "args: {:#?}", t.args);
+        }
+    }
+}
