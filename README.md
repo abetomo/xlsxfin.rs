@@ -15,7 +15,7 @@ Excel Financial functions.
 * pmt
     * [office/pmt-function](https://support.microsoft.com/en-us/office/pmt-function-0214da64-9a63-4996-bc20-214433fa6441)
 * ppmt
-    * [office/ppmt-functiooffice/ppmt-functionn](https://support.microsoft.com/en-us/office/ppmt-function-c370d9e3-7749-4ca4-beea-b06c6ac95e1b)
+    * [office/ppmt-function](https://support.microsoft.com/en-us/office/ppmt-function-c370d9e3-7749-4ca4-beea-b06c6ac95e1b)
 
 ## Example
 
