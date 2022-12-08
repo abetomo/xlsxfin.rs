@@ -17,7 +17,7 @@ pub fn pmt(rate: f64, nper: i64, pv: i64, fv: i64, payment_flag: bool) -> f64 {
     if !payment_flag {
         return pmt;
     }
-    return pmt / (1.0 + rate);
+    pmt / (1.0 + rate)
 }
 
 #[cfg(test)]
@@ -185,7 +185,7 @@ pub fn ipmt(rate: f64, per: i64, nper: i64, pv: i64, fv: i64, payment_flag: bool
     if !payment_flag {
         return ip;
     }
-    return ip / (1.0 + rate);
+    ip / (1.0 + rate)
 }
 
 #[cfg(test)]
@@ -343,7 +343,7 @@ pub fn fv(rate: f64, nper: i64, pmt: f64, pv: i64, payment_flag: bool) -> f64 {
     if payment_flag {
         return -(pv_f64 * term + (pmt * (1.0 + rate) * (term - 1.0)) / rate);
     }
-    return -(pv_f64 * term + (pmt * (term - 1.0)) / rate);
+    -(pv_f64 * term + (pmt * (term - 1.0)) / rate)
 }
 
 #[cfg(test)]
@@ -478,12 +478,12 @@ mod tests_fv {
 }
 
 pub fn ppmt(rate: f64, per: i64, nper: i64, pv: i64, fv: i64, payment_flag: bool) -> f64 {
-    if per < 1 || per >= nper + 1 {
+    if per < 1 || per > nper {
         return 0.0;
     }
     let pmt = pmt(rate, nper, pv, fv, payment_flag);
     let ipmt = ipmt(rate, per, nper, pv, fv, payment_flag);
-    return pmt - ipmt;
+    pmt - ipmt
 }
 
 #[cfg(test)]
@@ -657,11 +657,9 @@ pub fn cumipmt(rate: f64, nper: i64, pv: i64, start: i64, end: i64, payment_flag
     let pmt = pmt(rate, nper, pv, 0, payment_flag);
     let mut interest = 0.0;
     let mut mut_start = start;
-    if start == 1 {
-        if !payment_flag {
-            interest = -pv as f64;
-            mut_start += 1;
-        }
+    if start == 1 && !payment_flag {
+        interest = -pv as f64;
+        mut_start += 1;
     }
     for i in mut_start..end + 1 {
         interest += if payment_flag {
@@ -670,7 +668,7 @@ pub fn cumipmt(rate: f64, nper: i64, pv: i64, start: i64, end: i64, payment_flag
             fv(rate, i - 1, pmt, pv, false)
         };
     }
-    return interest * rate;
+    interest * rate
 }
 
 #[cfg(test)]
