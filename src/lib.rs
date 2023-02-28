@@ -657,8 +657,10 @@ pub fn cumipmt(rate: f64, nper: i64, pv: i64, start: i64, end: i64, payment_flag
     let pmt = pmt(rate, nper, pv, 0, payment_flag);
     let mut interest = 0.0;
     let mut mut_start = start;
-    if start == 1 && !payment_flag {
-        interest = -pv as f64;
+    if start == 1 {
+        if !payment_flag {
+            interest = -pv as f64;
+        }
         mut_start += 1;
     }
     for i in mut_start..end + 1 {
@@ -891,7 +893,7 @@ mod tests_cumipmt {
                     end: 12,
                     payment_flag: true,
                 },
-                expected: -849_911.0839829034,
+                expected: -777_183.8112556307,
             },
             TestData {
                 args: TestArgs {
