@@ -1,6 +1,6 @@
 [package]
 name = "xlsxfin"
-version = "0.1.0"
+version = "0.1.1"
 authors = ["abetomo <abe@enzou.tokyo>"]
 description = "Excel Financial functions."
 edition = "2018"
