@@ -3,6 +3,7 @@ name = "xlsxfin"
 version = "0.1.1"
 authors = ["abetomo <abe@enzou.tokyo>"]
 description = "Excel Financial functions."
+repository = "https://github.com/abetomo/xlsxfin.rs"
 edition = "2018"
 license = "MIT"
 
